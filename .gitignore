@@ -11,3 +11,5 @@ app/contract.json
 public/contract.json
 .idea/
 .vscode/
+mcps/
+.cursor/
