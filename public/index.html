@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prior-Authorization Network</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              clinic: {
+                50: "#effbf7",
+                500: "#0f766e",
+                700: "#115e59",
+                900: "#134e4a",
+              },
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="min-h-screen bg-slate-100 text-slate-800">
+    <header class="border-b border-teal-900/10 bg-clinic-900 text-white">
+      <div class="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-6 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-teal-200">Automated Healthcare Network</p>
+          <h1 class="text-2xl font-semibold md:text-3xl">Prior-Authorization Ledger</h1>
+        </div>
+        <div class="flex flex-col items-start gap-2 text-sm text-teal-100 md:items-end">
+          <p id="network-status" class="text-xs text-teal-300">Checking network…</p>
+          <div id="session-bar" class="hidden items-center gap-3">
+            <span id="session-label" class="text-xs text-teal-200"></span>
+            <button
+              id="logout-btn"
+              class="rounded-lg border border-teal-200/40 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/10"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section id="login-view" class="mx-auto max-w-md px-6 py-16">
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <p class="text-xs font-semibold uppercase tracking-widest text-clinic-500">Sign in</p>
+        <h2 class="mt-1 text-xl font-semibold text-slate-900">Choose your workspace</h2>
+        <p class="mt-2 text-sm text-slate-500">Hospital staff submit requests. Insurers evaluate them.</p>
+        <form id="login-form" class="mt-6 space-y-4">
+          <label class="block">
+            <span class="mb-1 block text-sm font-medium">Username</span>
+            <input
+              id="username"
+              name="username"
+              required
+              autocomplete="username"
+              placeholder="hospital or insurer"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-clinic-500 focus:ring"
+            />
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-sm font-medium">Password</span>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              autocomplete="current-password"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-clinic-500 focus:ring"
+            />
+          </label>
+          <button
+            type="submit"
+            class="w-full rounded-lg bg-clinic-700 px-4 py-2.5 font-medium text-white hover:bg-clinic-900"
+          >
+            Submit
+          </button>
+        </form>
+        <p id="login-message" class="mt-4 hidden rounded-lg px-3 py-2 text-sm"></p>
+      </div>
+    </section>
+
+    <main class="mx-auto max-w-7xl px-6 py-8">
+      <section id="hospital-view" class="hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-6">
+          <p class="text-xs font-semibold uppercase tracking-widest text-clinic-500">Hospital Portal</p>
+          <h2 class="mt-1 text-xl font-semibold text-slate-900">Submit Authorization Request</h2>
+          <p class="mt-2 text-sm text-slate-500">
+            Clinical details are encrypted before storage. Integrity is recorded on the network without showing keys in this portal.
+          </p>
+        </div>
+
+        <form id="submit-form" class="space-y-4">
+          <label class="block">
+            <span class="mb-1 block text-sm font-medium">Patient ID</span>
+            <input
+              id="patientId"
+              name="patientId"
+              required
+              placeholder="PT-10428"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-clinic-500 focus:ring"
+            />
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-sm font-medium">Diagnosis</span>
+            <input
+              id="diagnosis"
+              name="diagnosis"
+              required
+              placeholder="Type 2 diabetes mellitus"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-clinic-500 focus:ring"
+            />
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-sm font-medium">Procedure Code</span>
+            <input
+              id="procedureCode"
+              name="procedureCode"
+              required
+              placeholder="CPT-99214 or AUTH-MRI-KNEE"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-clinic-500 focus:ring"
+            />
+            <span class="mt-1 block text-xs text-slate-500">
+              Auto-approve when the code starts with AUTH- or equals CPT-99214.
+            </span>
+          </label>
+          <button
+            type="submit"
+            class="w-full rounded-lg bg-clinic-700 px-4 py-2.5 font-medium text-white hover:bg-clinic-900"
+          >
+            Submit Authorization Request
+          </button>
+        </form>
+        <p id="submit-message" class="mt-4 hidden rounded-lg px-3 py-2 text-sm"></p>
+      </section>
+
+      <section id="insurer-view" class="hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="mb-6 flex items-start justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-widest text-clinic-500">Insurer &amp; Audit Ledger</p>
+            <h2 class="mt-1 text-xl font-semibold text-slate-900">Live Authorization Queue</h2>
+          </div>
+          <button
+            id="refresh-btn"
+            class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50"
+          >
+            Refresh
+          </button>
+        </div>
+        <p id="insurer-message" class="mb-4 hidden rounded-lg px-3 py-2 text-sm"></p>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-left text-sm">
+            <thead class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                <th class="py-2 pr-3">ID</th>
+                <th class="py-2 pr-3">Patient details</th>
+                <th class="py-2 pr-3">Status</th>
+                <th class="py-2">Action</th>
+              </tr>
+            </thead>
+            <tbody id="requests-body">
+              <tr>
+                <td colspan="4" class="py-8 text-center text-slate-400">No requests yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="/public/app.js"></script>
+  </body>
+</html>

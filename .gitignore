@@ -1,0 +1,13 @@
+node_modules/
+artifacts/
+cache/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+*.db
+app/contract.json
+public/contract.json
+.idea/
+.vscode/
