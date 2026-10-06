@@ -132,7 +132,7 @@ async function readOnChainStatus(requestId) {
 
 function renderRows(rows) {
   if (!rows.length) {
-    requestsBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-400">No requests yet.</td></tr>`;
+    requestsBody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">No requests yet.</td></tr>`;
     return;
   }
 
@@ -140,10 +140,12 @@ function renderRows(rows) {
     .map((row) => {
       const pending = row.status === "Pending";
       const details = `${row.patientId} · ${row.diagnosis} · ${row.procedureCode}`;
+      const timeStr = row.timestamp ? new Date(row.timestamp * 1000).toLocaleString() : "Just now";
       return `
         <tr class="border-b border-slate-100 align-top">
           <td class="py-3 pr-3 font-mono font-semibold">#${row.requestId}</td>
           <td class="py-3 pr-3 text-slate-700">${details}</td>
+          <td class="py-3 pr-3 text-xs text-slate-500">${timeStr}</td>
           <td class="py-3 pr-3">${statusBadge(row.status)}</td>
           <td class="py-3">
             <button
@@ -176,7 +178,7 @@ async function loadRequests() {
   }
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: "Unable to load requests." }));
-    requestsBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-rose-500">${errorDetail(error, "Unable to load requests.")}</td></tr>`;
+    requestsBody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-rose-500">${errorDetail(error, "Unable to load requests.")}</td></tr>`;
     return;
   }
   const rows = await response.json();
@@ -204,7 +206,8 @@ async function evaluateRequest(requestId) {
     showInsurerMessage(errorDetail(payload, "Evaluation failed."), false);
     return;
   }
-  showInsurerMessage(`Request #${requestId} is now ${payload.status}.`, true);
+  const txInfo = payload.txHash ? ` (Tx: ${payload.txHash.slice(0, 10)}…)` : "";
+  showInsurerMessage(`Request #${requestId} evaluated to ${payload.status}${txInfo}.`, true);
   await loadRequests();
 }
 
@@ -257,7 +260,8 @@ form.addEventListener("submit", async (event) => {
     return;
   }
   form.reset();
-  showMessage(`Submitted request #${payload.requestId}.`, true);
+  const txInfo = payload.txHash ? ` (Tx: ${payload.txHash.slice(0, 10)}…)` : "";
+  showMessage(`Submitted request #${payload.requestId}${txInfo}.`, true);
 });
 
 refreshBtn.addEventListener("click", loadRequests);

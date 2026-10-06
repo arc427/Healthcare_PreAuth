@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import secrets
 from typing import Any
 
 from cryptography.hazmat.backends import default_backend
@@ -61,3 +62,20 @@ def generate_hash(data_string: str) -> str:
     if not isinstance(data_string, str):
         data_string = json.dumps(data_string, separators=(",", ":"), sort_keys=True)
     return hashlib.sha256(data_string.encode("utf-8")).hexdigest()
+
+
+def hash_password(password: str, salt: str | None = None) -> str:
+    """Hash a password securely using PBKDF2-HMAC-SHA256."""
+    if salt is None:
+        salt = secrets.token_hex(16)
+    key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100_000)
+    return f"{salt}${key.hex()}"
+
+
+def verify_password(password: str, password_hash: str) -> bool:
+    """Verify a plain password against a PBKDF2-HMAC-SHA256 password hash."""
+    if "$" not in password_hash:
+        return False
+    salt, _ = password_hash.split("$", 1)
+    computed = hash_password(password, salt)
+    return secrets.compare_digest(computed, password_hash)
